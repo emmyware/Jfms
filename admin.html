@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>JFMS Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F4F0;--surface:#FAFAF8;--card:#FFFFFF;--border:#E2DFD8;--black:#0D0D0D;--gold:#D4A520;--gold-bg:#FBF3DC;--gold-bd:#E8CB6A;--green:#16A34A;--green-bg:#DCFCE7;--red:#DC2626;--red-bg:#FEE2E2;--blue:#1D4ED8;--blue-bg:#DBEAFE;--orange:#EA580C;--muted:#6B7280;--muted2:#9CA3AF;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--black);font-family:'Outfit',sans-serif;font-size:15px;min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0D0D0D;padding:1.5rem;}
+.lcard{background:#16161E;border:1px solid #2A2A3A;border-radius:18px;padding:2rem;width:100%;max-width:360px;}
+.llogo{text-align:center;margin-bottom:1.75rem;}
+.lbadge{background:var(--gold);color:#0D0D0D;font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;padding:0.4rem 1rem;border-radius:8px;display:inline-block;letter-spacing:0.05em;}
+.lsub{font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.15em;text-transform:uppercase;color:#3A3A4A;margin-top:0.4rem;}
+.ltitle{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:#E0DDD5;margin-bottom:1.25rem;text-align:center;}
+.lfg{margin-bottom:1rem;}
+.lfg label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:#3A3A4A;margin-bottom:0.4rem;}
+.lfg input{width:100%;padding:0.82rem 1rem;background:#0D0D15;border:1.5px solid #2A2A3A;border-radius:10px;color:#E0DDD5;font-family:'Outfit',sans-serif;font-size:1rem;outline:none;-webkit-appearance:none;}
+.lfg input:focus{border-color:var(--gold);}
+.lerr{background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:0.65rem 1rem;font-size:0.78rem;color:#FCA5A5;margin-bottom:1rem;display:none;font-family:'IBM Plex Mono',monospace;}
+.lbtn{width:100%;padding:0.9rem;background:var(--gold);color:#0D0D0D;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;touch-action:manipulation;}
+.back-link{text-align:center;margin-top:1rem;}
+.back-link a{font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:#3A3A4A;text-decoration:none;}
+
+/* SHELL */
+#admin-shell{display:none;}
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 1rem;position:sticky;top:0;z-index:100;}
+.tb-logo{display:flex;align-items:center;gap:0.6rem;}
+.tb-badge{background:var(--gold);color:#0D0D0D;font-family:'Syne',sans-serif;font-weight:800;font-size:0.88rem;padding:0.2rem 0.6rem;border-radius:5px;}
+.tb-name{font-size:0.78rem;color:rgba(255,255,255,0.4);display:none;}
+@media(min-width:420px){.tb-name{display:block;}}
+.tb-right{display:flex;align-items:center;gap:0.5rem;}
+.apill{background:rgba(212,165,32,0.15);border:1px solid rgba(212,165,32,0.3);color:var(--gold);font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.26rem 0.6rem;border-radius:20px;}
+.out-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.45);font-family:'IBM Plex Mono',monospace;font-size:0.65rem;padding:0.26rem 0.6rem;border-radius:6px;cursor:pointer;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--card);border-top:1px solid var(--border);display:flex;height:60px;padding-bottom:env(safe-area-inset-bottom);}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;padding:0.3rem 0;touch-action:manipulation;border-top:3px solid transparent;color:var(--muted);position:relative;}
+.bnav-item.active{color:var(--gold);border-top-color:var(--gold);}
+.bnav-icon{font-size:1.2rem;line-height:1;}
+.bnav-label{font-size:0.56rem;font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;text-transform:uppercase;}
+.nb-badge{position:absolute;top:5px;right:calc(50% - 18px);background:var(--red);color:white;font-size:0.56rem;padding:0.08rem 0.32rem;border-radius:10px;font-family:'IBM Plex Mono',monospace;display:none;}
+
+/* CONTENT */
+.content{padding:1.25rem 1rem;padding-bottom:calc(60px + 1.5rem + env(safe-area-inset-bottom));max-width:800px;margin:0 auto;}
+.page{display:none;}.page.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.2rem;}
+.page-sub{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;color:var(--muted);margin-bottom:1.4rem;text-transform:uppercase;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.4rem;}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;}
+.sc-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.35rem;}
+.sc-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1;margin-bottom:0.2rem;}
+.sc-sub{font-size:0.72rem;color:var(--muted);}
+
+/* CARD */
+.acard{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.25rem;}
+.acard-head{display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.1rem;border-bottom:1px solid var(--border);gap:0.75rem;flex-wrap:wrap;}
+.acard-title{font-family:'IBM Plex Mono',monospace;font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;}
+
+/* REG ITEM */
+.reg-item{padding:1rem 1.1rem;border-bottom:1px solid var(--border);}
+.reg-item:last-child{border-bottom:none;}
+.reg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem;}
+.reg-name{font-weight:700;font-size:0.95rem;}
+.reg-email{font-size:0.75rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.reg-meta{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.65rem;}
+.reg-tag{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.55rem;font-size:0.72rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.reg-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:0.2rem;padding:0.2rem 0.55rem;border-radius:20px;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.b-pend{background:#FEF3C7;color:#92400E;}.b-act{background:var(--green-bg);color:#065F46;}.b-canc{background:var(--red-bg);color:#991B1B;}
+.b-unconf{background:#FFEDD5;color:#9A3412;}.b-conf{background:var(--green-bg);color:#065F46;}.b-cred{background:var(--blue-bg);color:#1E3A8A;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.55rem 1rem;border-radius:9px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:700;touch-action:manipulation;-webkit-appearance:none;white-space:nowrap;}
+.btn:active{transform:scale(0.96);}
+.btn-full{width:100%;padding:0.85rem;font-size:0.9rem;border-radius:11px;}
+.btn-gold{background:var(--gold);color:#0D0D0D;}.btn-green{background:var(--green);color:white;}.btn-red{background:var(--red);color:white;}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+
+/* FORM */
+.fgrp{margin-bottom:1rem;}
+.fgrp label{display:block;font-family:'IBM Plex Mono',monospace;font-size:0.64rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.38rem;}
+.fgrp input,.fgrp select{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.95rem;color:var(--black);outline:none;-webkit-appearance:none;}
+.fgrp input:focus,.fgrp select:focus{border-color:var(--gold);}
+
+/* SEARCH & FILTER */
+.search-wrap{position:relative;margin-bottom:1rem;}
+.search-wrap::before{content:'🔍';position:absolute;left:0.8rem;top:50%;transform:translateY(-50%);font-size:0.85rem;pointer-events:none;}
+.search-input{width:100%;padding:0.7rem 1rem 0.7rem 2.4rem;border:1.5px solid var(--border);border-radius:9px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.9rem;color:var(--black);outline:none;-webkit-appearance:none;}
+.search-input:focus{border-color:var(--gold);}
+.filter-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;}
+.fsel{flex:1;min-width:130px;padding:0.6rem 0.85rem;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);font-family:'Outfit',sans-serif;font-size:0.82rem;color:var(--black);outline:none;-webkit-appearance:none;}
+.fsel:focus{border-color:var(--gold);}
+
+/* COMMISSION */
+.cbox{background:var(--gold-bg);border:1px solid var(--gold-bd);border-radius:11px;padding:1.1rem;margin-bottom:1rem;}
+.cbox-title{font-family:'IBM Plex Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:0.65rem;}
+.crow{display:flex;justify-content:space-between;padding:0.42rem 0;border-bottom:1px solid var(--gold-bd);font-size:0.85rem;flex-wrap:wrap;gap:0.25rem;}
+.crow:last-child{border-bottom:none;padding-bottom:0;}
+.cwho{color:var(--muted);}.camt{font-weight:700;font-family:'IBM Plex Mono',monospace;}.crow.ctot{font-weight:700;}
+
+/* LEADERBOARD */
+.lb-item{display:flex;align-items:center;gap:0.85rem;padding:0.9rem 1.1rem;border-bottom:1px solid var(--border);}
+.lb-item:last-child{border-bottom:none;}
+.lb-rank{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;width:1.6rem;color:var(--border);flex-shrink:0;}
+.lb-rank.r1{color:var(--gold);}.lb-rank.r2{color:#9CA3AF;}.lb-rank.r3{color:#B45309;}
+.lb-av{width:36px;height:36px;border-radius:50%;background:var(--black);color:var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:0.88rem;flex-shrink:0;}
+.lb-info{flex:1;min-width:0;}
+.lb-name{font-weight:700;font-size:0.9rem;}
+.lb-code{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-bar-w{height:4px;background:var(--border);border-radius:2px;margin-top:0.3rem;}
+.lb-bar{height:100%;border-radius:2px;background:var(--gold);transition:width 0.6s;}
+.lb-stats{text-align:right;flex-shrink:0;}
+.lb-num{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--gold);line-height:1;}
+.lb-earn{font-size:0.65rem;color:var(--green);font-family:'IBM Plex Mono',monospace;}
+
+/* REFERRER ITEM */
+.rf-item{padding:1rem 1.1rem;border-bottom:1px solid var(--border);}
+.rf-item:last-child{border-bottom:none;}
+.rf-top{display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;}
+.rf-name{font-weight:700;}
+.rf-code{display:inline-block;background:var(--black);color:var(--gold);padding:0.15rem 0.55rem;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;letter-spacing:0.1em;margin-bottom:0.4rem;}
+.rf-link{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--blue);word-break:break-all;background:var(--blue-bg);border-radius:7px;padding:0.45rem 0.7rem;margin-bottom:0.55rem;}
+.rf-actions{display:flex;gap:0.5rem;flex-wrap:wrap;}
+
+/* COMM ITEM */
+.comm-item{padding:1rem 1.1rem;border-bottom:1px solid var(--border);}
+.comm-item:last-child{border-bottom:none;}
+.comm-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;gap:0.5rem;flex-wrap:wrap;}
+.comm-name{font-weight:700;}
+.comm-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:0.65rem;}
+.cbd{background:var(--bg);border-radius:7px;padding:0.45rem 0.6rem;}
+.cbd-label{font-family:'IBM Plex Mono',monospace;font-size:0.56rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.15rem;}
+.cbd-val{font-family:'IBM Plex Mono',monospace;font-size:0.82rem;font-weight:600;}
+
+/* PARTY CARD */
+.party-card{border-radius:11px;padding:1.1rem;margin-bottom:0.75rem;}
+.party-label{font-family:'IBM Plex Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.6rem;}
+.party-name{font-weight:700;margin-bottom:0.25rem;}
+.party-acct{font-family:'IBM Plex Mono',monospace;font-size:0.92rem;font-weight:600;margin-bottom:0.2rem;}
+.party-bank{font-size:0.78rem;color:var(--muted);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s;}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card);border-radius:18px 18px 0 0;padding:1.5rem;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;transform:translateY(20px);transition:transform 0.28s ease;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom));}
+.overlay.open .modal{transform:translateY(0);}
+@media(min-width:600px){.overlay{align-items:center;}.modal{border-radius:18px;max-height:85vh;}}
+.modal-drag{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.1rem;}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:1.1rem;padding-bottom:0.75rem;border-bottom:2px solid var(--border);}
+.modal-actions{display:flex;gap:0.65rem;margin-top:1.25rem;flex-wrap:wrap;}
+.modal-actions .btn{flex:1;min-width:120px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);}
+.empty .ei{font-size:2rem;margin-bottom:0.5rem;}
+.empty p{font-size:0.8rem;font-family:'IBM Plex Mono',monospace;}
+
+/* PROOF */
+.proof-img{max-width:100%;border-radius:10px;border:1px solid var(--border);margin-top:0.75rem;}
+
+/* TOAST */
+#toast{position:fixed;bottom:calc(60px + 1rem);left:1rem;right:1rem;background:var(--black);color:white;padding:0.85rem 1.2rem;border-radius:11px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;border-left:4px solid var(--gold);box-shadow:0 8px 32px rgba(0,0,0,0.2);opacity:0;transform:translateY(6px);transition:all 0.3s;z-index:9999;pointer-events:none;}
+#toast.show{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lcard">
+    <div class="llogo"><div class="lbadge">JFMS</div><div class="lsub">Admin Portal</div></div>
+    <div class="ltitle">Sign in to continue</div>
+    <div class="lerr" id="lerr">Incorrect password. Try again.</div>
+    <div class="lfg"><label>Password</label><input type="password" id="pwd" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="lbtn" onclick="doLogin()">Access Admin Panel →</button>
+    <div class="back-link"><a href="index.html">← Back to Registration</a></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-shell">
+  <div class="topbar">
+    <div class="tb-logo"><div class="tb-badge">JFMS</div><div class="tb-name">Admin Panel</div></div>
+    <div class="tb-right"><div class="apill">Admin</div><button class="out-btn" onclick="doLogout()">Logout</button></div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="p-dash">
+      <div class="page-title">Dashboard</div><div class="page-sub">— Overview</div>
+      <div class="stats-grid" id="dash-stats"></div>
+      <div class="acard">
+        <div class="acard-head"><div class="acard-title">⏳ Pending Confirmation</div><button class="btn btn-ghost" style="font-size:0.72rem;padding:0.38rem 0.7rem;" onclick="showPage('p-regs')">View All</button></div>
+        <div id="dash-pending"></div>
+      </div>
+      <div class="acard"><div class="acard-head"><div class="acard-title">🏆 Top Referrers</div></div><div id="dash-lb"></div></div>
+    </div>
+
+    <!-- REGISTRATIONS -->
+    <div class="page" id="p-regs">
+      <div class="page-title">Registrations</div><div class="page-sub">— Confirm payments</div>
+      <div class="search-wrap"><input class="search-input" id="reg-search" type="text" placeholder="Search name, email…" oninput="renderRegs()"></div>
+      <div class="filter-row">
+        <select class="fsel" id="reg-pf" onchange="renderRegs()"><option value="">All Payments</option><option>Unconfirmed</option><option>Confirmed</option></select>
+        <select class="fsel" id="reg-sf" onchange="renderRegs()"><option value="">All Status</option><option>Pending Payment</option><option>Active</option><option>Cancelled</option></select>
+      </div>
+      <div class="acard"><div id="regs-list"></div></div>
+    </div>
+
+    <!-- REFERRERS -->
+    <div class="page" id="p-refs">
+      <div class="page-title">Referrers</div><div class="page-sub">— Manage codes & links</div>
+      <div class="acard" style="margin-bottom:1.25rem;">
+        <div class="acard-head"><div class="acard-title">✨ Add New Referrer</div></div>
+        <div style="padding:1.1rem;">
+          <div class="fgrp"><label>Full Name *</label><input type="text" id="rf-name" placeholder="John Doe" autocomplete="name"></div>
+          <div class="fgrp"><label>Email *</label><input type="email" id="rf-email" placeholder="john@email.com" autocomplete="email" inputmode="email"></div>
+          <div class="fgrp"><label>Custom Code <span style="font-weight:400;color:var(--muted2);">(auto if blank)</span></label><input type="text" id="rf-code" placeholder="e.g. VIP2025" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9-]/g,'')" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+          <div id="code-preview" style="margin-bottom:0.85rem;"></div>
+          <div style="display:flex;gap:0.6rem;">
+            <button class="btn btn-gold btn-full" onclick="addReferrer()">+ Add Referrer</button>
+            <button class="btn btn-ghost" style="flex-shrink:0;" onclick="previewCode()">🔀</button>
+          </div>
+        </div>
+      </div>
+      <div class="search-wrap"><input class="search-input" id="rf-search" type="text" placeholder="Search referrers…" oninput="renderRefs()"></div>
+      <div class="acard"><div id="refs-list"></div></div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="page" id="p-lb">
+      <div class="page-title">Leaderboard</div><div class="page-sub">— By confirmed referrals</div>
+      <div class="acard"><div id="lb-full"></div></div>
+    </div>
+
+    <!-- COMMISSIONS -->
+    <div class="page" id="p-comm">
+      <div class="page-title">Commissions</div><div class="page-sub">— Per-registration breakdown</div>
+      <div class="stats-grid" id="comm-stats"></div>
+      <div class="acard" style="margin-bottom:1.25rem;">
+        <div class="acard-head">
+          <div class="acard-title">💰 Commission Ledger</div>
+          <select id="comm-filter" onchange="renderComm()" style="padding:0.38rem 0.6rem;border:1.5px solid var(--border);border-radius:7px;font-size:0.72rem;outline:none;-webkit-appearance:none;">
+            <option value="">All</option><option value="credited">Credited</option><option value="pending">Pending</option>
+          </select>
+        </div>
+        <div id="comm-list"></div>
+      </div>
+      <div class="acard">
+        <div class="acard-head"><div class="acard-title">👤 Commission Parties</div></div>
+        <div style="padding:1.1rem;">
+          <div class="party-card" style="background:var(--gold-bg);border:1px solid var(--gold-bd);">
+            <div class="party-label" style="color:var(--gold);">School Account · receives all payments first</div>
+            <div class="party-name">Tolulope Mojola Adekeye</div>
+            <div class="party-acct">5163709879 <button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.5rem;border-radius:6px;display:inline-flex;" onclick="copyTxt('5163709879')">Copy</button></div>
+            <div class="party-bank">Moniepoint MFB</div>
+          </div>
+          <div class="party-card" style="background:var(--blue-bg);border:1px solid #BFDBFE;">
+            <div class="party-label" style="color:var(--blue);">Technician · 8% of fee paid</div>
+            <div class="party-name">Emmanuel Adekeye</div>
+            <div class="party-acct">7081210011 <button class="btn btn-ghost" style="font-size:0.65rem;padding:0.2rem 0.5rem;border-radius:6px;display:inline-flex;" onclick="copyTxt('7081210011')">Copy</button></div>
+            <div class="party-bank">OPay</div>
+          </div>
+          <div class="party-card" style="background:var(--bg);border:1px solid var(--border);">
+            <div class="party-label" style="color:var(--muted);">Middleman · 10% · Admin disburses manually</div>
+            <div style="font-size:0.85rem;color:var(--muted);">Tracked in the commission ledger above. Disbursement handled manually per referral chain.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="bnav-item active" id="bn-dash" onclick="showPage('p-dash')"><div class="bnav-icon">📊</div><div class="bnav-label">Dash</div></div>
+    <div class="bnav-item" id="bn-regs" onclick="showPage('p-regs')" style="position:relative;"><div class="bnav-icon">📋</div><div class="bnav-label">Regs</div><div class="nb-badge" id="nb">0</div></div>
+    <div class="bnav-item" id="bn-refs" onclick="showPage('p-refs')"><div class="bnav-icon">🔗</div><div class="bnav-label">Referrers</div></div>
+    <div class="bnav-item" id="bn-lb" onclick="showPage('p-lb')"><div class="bnav-icon">🏆</div><div class="bnav-label">Board</div></div>
+    <div class="bnav-item" id="bn-comm" onclick="showPage('p-comm')"><div class="bnav-icon">💰</div><div class="bnav-label">Comm.</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-body"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+const ADMIN_PWD='Tolulope247',REG_FEE=15000,PROMO_FEE=10000;
+const REF_PCT=0.25,MID_PCT=0.10,TECH_PCT=0.08; // Technician = 8%
+
+function doLogin(){const pwd=document.getElementById('pwd').value;if(pwd===ADMIN_PWD){document.getElementById('login-screen').style.display='none';document.getElementById('admin-shell').style.display='block';document.getElementById('lerr').style.display='none';renderAll();}else{document.getElementById('lerr').style.display='block';document.getElementById('pwd').value='';}}
+function doLogout(){document.getElementById('login-screen').style.display='flex';document.getElementById('admin-shell').style.display='none';document.getElementById('pwd').value='';}
+
+function getDB(){try{return JSON.parse(localStorage.getItem('jfms_v3'))||{referrers:[],registrations:[]};}catch(e){return{referrers:[],registrations:[]};}}
+function saveDB(db){try{localStorage.setItem('jfms_v3',JSON.stringify(db));}catch(e){}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const fmt=ts=>new Date(ts).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+const fmtN=n=>'₦'+Number(n).toLocaleString();
+const ini=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+function genCode(name){const pfx=name.trim().split(' ')[0].toUpperCase().replace(/[^A-Z]/g,'').slice(0,5)||'JFMS';const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const sfx=Array.from({length:4},()=>ch[Math.floor(Math.random()*ch.length)]).join('');return`${pfx}-${sfx}`;}
+function getComm(reg){const fee=reg.fee||REG_FEE;const refCut=reg.referrerId?Math.round(fee*REF_PCT):0;const midCut=reg.referrerId?Math.round(fee*MID_PCT):0;const techCut=Math.round(fee*TECH_PCT);return{fee,refCut,midCut,techCut,net:fee-refCut-midCut-techCut};}
+
+function seed(){
+  const db=getDB();if(db.referrers.length)return;
+  const refs=[{name:'Marcus Johnson',email:'marcus@email.com'},{name:'Priya Patel',email:'priya@email.com'},{name:'Sarah Williams',email:'sarah@email.com'}];
+  refs.forEach(r=>db.referrers.push({id:uid(),name:r.name,email:r.email,code:genCode(r.name),createdAt:Date.now()-Math.random()*6e8}));
+  const insts=['Piano','Guitar','Violin','Drums','Voice'];
+  const names=[['Alice','Kim'],['Ben','Torres'],['Clara','Murphy'],['David','Park'],['Ella','Nguyen'],['Frank','Osei']];
+  names.forEach((n,i)=>{const ref=db.referrers[i%db.referrers.length];const hp=i%3!==0;db.registrations.push({id:'SEED-'+i,first:n[0],last:n[1],email:`${n[0].toLowerCase()}@ex.com`,phone:'080-000-'+i,instruments:[insts[i%insts.length]],level:'Beginner',referralCode:hp?ref.code:'',referrerId:hp?ref.id:null,referrerName:hp?ref.name:'',fee:hp?PROMO_FEE:REG_FEE,hasPromo:hp,txRef:'TXN-'+i,proofFileName:'receipt.jpg',proofDataUrl:'',status:i<4?'Active':'Pending Payment',paymentStatus:i<4?'Confirmed':'Unconfirmed',referralCredited:i<4&&hp,createdAt:Date.now()-Math.random()*3e8});});
+  saveDB(db);
+}
+
+// DASHBOARD
+function renderDashStats(){
+  const db=getDB(),regs=db.registrations;
+  const conf=regs.filter(r=>r.paymentStatus==='Confirmed'),unc=regs.filter(r=>r.paymentStatus==='Unconfirmed');
+  const rev=conf.reduce((s,r)=>s+r.fee,0),rfc=conf.filter(r=>r.referrerId).length;
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="sc"><div class="sc-label">Registrations</div><div class="sc-val">${regs.length}</div><div class="sc-sub">${conf.length} confirmed</div></div>
+    <div class="sc"><div class="sc-label">Awaiting</div><div class="sc-val" style="color:var(--orange);">${unc.length}</div><div class="sc-sub">Need review</div></div>
+    <div class="sc"><div class="sc-label">Revenue</div><div class="sc-val" style="color:var(--green);font-size:1.4rem;">${fmtN(rev)}</div><div class="sc-sub">confirmed</div></div>
+    <div class="sc"><div class="sc-label">Via Referral</div><div class="sc-val" style="color:var(--gold);">${rfc}</div><div class="sc-sub">${regs.length?Math.round(rfc/regs.length*100):0}%</div></div>`;
+}
+
+function renderDashPending(){
+  const db=getDB();
+  const list=db.registrations.filter(r=>r.paymentStatus==='Unconfirmed').sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
+  const el=document.getElementById('dash-pending');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="ei">🎉</div><p>No pending confirmations</p></div>';return;}
+  el.innerHTML=list.map(r=>`<div class="reg-item">
+    <div class="reg-top"><div><div class="reg-name">${r.first} ${r.last}</div><div class="reg-email">${r.phone}</div></div><span class="badge b-unconf">⏳ Unconfirmed</span></div>
+    <div class="reg-meta"><span class="reg-tag">${fmtN(r.fee)}</span>${r.referrerName?`<span class="reg-tag">via ${r.referrerName}</span>`:''}</div>
+    <button class="btn btn-green btn-full" onclick="confirmPayment('${r.id}')">✓ Confirm Payment</button>
+  </div>`).join('');
+}
+
+function renderDashLB(){
+  const lb=getLB().slice(0,4),max=lb[0]?.count||1,el=document.getElementById('dash-lb');
+  if(!lb.length){el.innerHTML='<div class="empty"><div class="ei">🏆</div><p>No referrers yet</p></div>';return;}
+  el.innerHTML=lb.map((r,i)=>lbRow(r,i,max)).join('');
+}
+
+// REGISTRATIONS
+function renderRegs(){
+  const db=getDB();
+  const q=(document.getElementById('reg-search')?.value||'').toLowerCase();
+  const pf=document.getElementById('reg-pf')?.value||'';
+  const sf=document.getElementById('reg-sf')?.value||'';
+  let regs=[...db.registrations].sort((a,b)=>b.createdAt-a.createdAt);
+  if(q)regs=regs.filter(r=>`${r.first} ${r.last} ${r.email}`.toLowerCase().includes(q));
+  if(pf)regs=regs.filter(r=>r.paymentStatus===pf);
+  if(sf)regs=regs.filter(r=>r.status===sf);
+  const n=db.registrations.filter(r=>r.paymentStatus==='Unconfirmed').length;
+  const nb=document.getElementById('nb');if(nb){nb.textContent=n;nb.style.display=n?'block':'none';}
+  const el=document.getElementById('regs-list');
+  if(!regs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div><p>No registrations found</p></div>';return;}
+  const sbMap={Active:'b-act','Pending Payment':'b-pend',Cancelled:'b-canc'};
+  el.innerHTML=regs.map(r=>`<div class="reg-item">
+    <div class="reg-top"><div><div class="reg-name">${r.first} ${r.last}</div><div class="reg-email">${r.email}</div></div><span class="badge ${sbMap[r.status]||'b-pend'}">${r.status}</span></div>
+    <div class="reg-meta">
+      <span class="reg-tag">${fmtN(r.fee)}${r.hasPromo?' 🎟':''}</span>
+      <span class="reg-tag">${r.instruments?.join(', ')||'—'}</span>
+      ${r.referrerName?`<span class="reg-tag">via ${r.referrerName}</span>`:''}
+      <span class="badge ${r.paymentStatus==='Confirmed'?'b-conf':'b-unconf'}">${r.paymentStatus==='Confirmed'?'✓ Paid':'⏳ Unconfirmed'}</span>
+    </div>
+    <div class="reg-actions">
+      ${r.paymentStatus==='Unconfirmed'?`<button class="btn btn-green" onclick="confirmPayment('${r.id}')">✓ Confirm</button>`:''}
+      <button class="btn btn-ghost" onclick="viewReg('${r.id}')">View</button>
+      <button class="btn btn-red" onclick="cancelReg('${r.id}')">Cancel</button>
+    </div>
+  </div>`).join('');
+}
+
+function confirmPayment(id){
+  const db=getDB(),reg=db.registrations.find(r=>r.id===id);if(!reg)return;
+  const c=getComm(reg);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-drag"></div>
+    <div class="modal-title">✓ Confirm Payment</div>
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1.1rem;">Confirming payment for <strong>${reg.first} ${reg.last}</strong>.</p>
+    <div class="cbox">
+      <div class="cbox-title">💰 Commission — ${fmtN(reg.fee)}</div>
+      ${reg.referrerId?`<div class="crow"><span class="cwho">Referrer: ${reg.referrerName} (25%)</span><span class="camt" style="color:var(--gold);">${fmtN(c.refCut)}</span></div>`:''}
+      <div class="crow"><span class="cwho">Middleman (10%)</span><span class="camt">${fmtN(c.midCut)}</span></div>
+      <div class="crow"><span class="cwho">Tech: Emmanuel (8%)</span><span class="camt">${fmtN(c.techCut)}</span></div>
+      <div class="crow ctot"><span>JFMS Net</span><span class="camt" style="color:var(--green);">${fmtN(c.net)}</span></div>
+    </div>
+    ${reg.proofDataUrl?`<img src="${reg.proofDataUrl}" class="proof-img">`:''}
+    ${reg.txRef?`<p style="font-size:0.78rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:0.5rem;">Ref: ${reg.txRef}</p>`:''}
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="doConfirm('${id}')">✓ Confirm & Activate</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function doConfirm(id){
+  const db=getDB(),reg=db.registrations.find(r=>r.id===id);if(!reg)return;
+  reg.paymentStatus='Confirmed';reg.status='Active';reg.referralCredited=!!reg.referrerId;reg.confirmedAt=Date.now();
+  saveDB(db);closeModal();renderAll();
+  toast(`✓ ${reg.first} ${reg.last} confirmed!${reg.referrerId?' Referral credited.':''}`);
+}
+
+function cancelReg(id){
+  if(!confirm('Cancel this registration?'))return;
+  const db=getDB(),reg=db.registrations.find(r=>r.id===id);
+  if(reg){reg.status='Cancelled';reg.paymentStatus='Unconfirmed';reg.referralCredited=false;}
+  saveDB(db);renderAll();toast('Registration cancelled.');
+}
+
+function viewReg(id){
+  const db=getDB(),reg=db.registrations.find(r=>r.id===id);if(!reg)return;
+  const c=getComm(reg);
+  const sbMap={Active:'b-act','Pending Payment':'b-pend',Cancelled:'b-canc'};
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-drag"></div>
+    <div class="modal-title">📋 ${reg.first} ${reg.last}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.1rem;">
+      <span class="badge ${sbMap[reg.status]||'b-pend'}">${reg.status}</span>
+      <span class="badge ${reg.paymentStatus==='Confirmed'?'b-conf':'b-unconf'}">${reg.paymentStatus}</span>
+      ${reg.referralCredited?'<span class="badge b-cred">Referral Credited</span>':''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;margin-bottom:1.1rem;">
+      ${[['Email',reg.email],['Phone',reg.phone],['Instruments',reg.instruments?.join(', ')||'—'],['Fee',fmtN(reg.fee)],['Promo',reg.hasPromo?'Yes':'No'],['Referrer',reg.referrerName||'—'],['Code',reg.referralCode||'—'],['Date',fmt(reg.createdAt)]]
+        .map(([k,v])=>`<div style="background:var(--bg);border-radius:7px;padding:0.5rem 0.75rem;"><div style="font-family:'IBM Plex Mono',monospace;font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.15rem;">${k}</div><div style="font-size:0.82rem;font-weight:600;word-break:break-word;">${v}</div></div>`).join('')}
+    </div>
+    ${reg.paymentStatus==='Confirmed'?`<div class="cbox"><div class="cbox-title">Commission</div>${reg.referrerId?`<div class="crow"><span class="cwho">Referrer (25%)</span><span class="camt" style="color:var(--gold);">${fmtN(c.refCut)}</span></div>`:''}<div class="crow"><span class="cwho">Middleman (10%)</span><span class="camt">${fmtN(c.midCut)}</span></div><div class="crow"><span class="cwho">Tech — Emmanuel (8%)</span><span class="camt">${fmtN(c.techCut)}</span></div><div class="crow ctot"><span>JFMS Net</span><span class="camt" style="color:var(--green);">${fmtN(c.net)}</span></div></div>`:''}
+    ${reg.proofDataUrl?`<img src="${reg.proofDataUrl}" class="proof-img">`:''}
+    <div class="modal-actions">
+      ${reg.paymentStatus==='Unconfirmed'?`<button class="btn btn-green" onclick="closeModal();confirmPayment('${reg.id}')">✓ Confirm Payment</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+// REFERRERS
+function addReferrer(){
+  const db=getDB();
+  const name=document.getElementById('rf-name').value.trim();
+  const email=document.getElementById('rf-email').value.trim();
+  const custom=document.getElementById('rf-code').value.trim().toUpperCase();
+  if(!name||!email){toast('⚠ Name and email required.');return;}
+  if(db.referrers.find(r=>r.email.toLowerCase()===email.toLowerCase())){toast('⚠ Email already exists.');return;}
+  const code=custom||genCode(name);
+  if(db.referrers.find(r=>r.code===code)){toast('⚠ Code already in use.');return;}
+  db.referrers.push({id:uid(),name,email,code,createdAt:Date.now()});
+  saveDB(db);renderAll();
+  document.getElementById('rf-name').value='';document.getElementById('rf-email').value='';document.getElementById('rf-code').value='';document.getElementById('code-preview').innerHTML='';
+  toast(`✓ ${name} added! Code: ${code}`);
+}
+
+function previewCode(){
+  const name=document.getElementById('rf-name').value.trim();
+  const code=genCode(name||'JFMS');
+  document.getElementById('code-preview').innerHTML=`<div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;"><span style="font-size:0.7rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;">Preview:</span><span style="background:var(--black);color:var(--gold);padding:0.22rem 0.7rem;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:0.92rem;letter-spacing:0.12em;">${code}</span><button class="btn btn-ghost" style="font-size:0.68rem;padding:0.28rem 0.6rem;" onclick="copyTxt('${code}')">Copy</button></div>`;
+}
+
+function renderRefs(){
+  const db=getDB();
+  const q=(document.getElementById('rf-search')?.value||'').toLowerCase();
+  let refs=[...db.referrers].sort((a,b)=>b.createdAt-a.createdAt);
+  if(q)refs=refs.filter(r=>r.name.toLowerCase().includes(q)||r.code.toLowerCase().includes(q));
+  const el=document.getElementById('refs-list');
+  if(!refs.length){el.innerHTML='<div class="empty"><div class="ei">🔗</div><p>No referrers found</p></div>';return;}
+  el.innerHTML=refs.map(r=>{
+    const regs=db.registrations.filter(reg=>reg.referrerId===r.id&&reg.paymentStatus==='Confirmed');
+    const count=regs.length,earned=regs.reduce((s,reg)=>s+Math.round(reg.fee*REF_PCT),0);
+    const link=makeLink(r.code);
+    return`<div class="rf-item">
+      <div class="rf-top"><div><div class="rf-name">${r.name}</div><div style="font-size:0.75rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;">${r.email}</div></div><div style="text-align:right;"><div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--gold);line-height:1;">${count}</div><div style="font-size:0.65rem;color:var(--green);font-family:'IBM Plex Mono',monospace;">${fmtN(earned)}</div></div></div>
+      <div class="rf-code">${r.code}</div>
+      <div class="rf-link">${link}</div>
+      <div class="rf-actions">
+        <button class="btn btn-gold" onclick="copyTxt('${link}')">📋 Copy Link</button>
+        <button class="btn btn-ghost" onclick="viewRef('${r.id}')">View</button>
+        <button class="btn btn-red" onclick="deleteRef('${r.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteRef(id){
+  if(!confirm('Delete this referrer?'))return;
+  const db=getDB();db.referrers=db.referrers.filter(r=>r.id!==id);
+  db.registrations.forEach(reg=>{if(reg.referrerId===id){reg.referrerId=null;reg.referralCode='';reg.referrerName='';}});
+  saveDB(db);renderAll();toast('Referrer deleted.');
+}
+
+function viewRef(id){
+  const db=getDB(),ref=db.referrers.find(r=>r.id===id);if(!ref)return;
+  const regs=db.registrations.filter(r=>r.referrerId===id);
+  const conf=regs.filter(r=>r.paymentStatus==='Confirmed');
+  const earned=conf.reduce((s,r)=>s+Math.round(r.fee*REF_PCT),0);
+  const link=makeLink(ref.code);
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-drag"></div>
+    <div class="modal-title">👤 ${ref.name}</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;font-family:'IBM Plex Mono',monospace;">${ref.email} · since ${fmt(ref.createdAt)}</p>
+    <div style="background:var(--black);border-radius:10px;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:1.2rem;color:var(--gold);letter-spacing:0.16em;">${ref.code}</span>
+      <button class="btn btn-ghost" style="color:var(--gold);border-color:rgba(212,165,32,0.3);" onclick="copyTxt('${ref.code}')">Copy Code</button>
+    </div>
+    <div style="background:var(--blue-bg);border-radius:8px;padding:0.6rem 0.9rem;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--blue);margin-bottom:0.75rem;word-break:break-all;">${link}</div>
+    <button class="btn btn-gold btn-full" style="margin-bottom:1.1rem;" onclick="copyTxt('${link}')">📋 Copy Share Link</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin-bottom:1.1rem;">
+      <div style="background:var(--bg);border-radius:9px;padding:0.8rem;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--gold);">${regs.length}</div><div style="font-size:0.65rem;color:var(--muted);">Total</div></div>
+      <div style="background:var(--bg);border-radius:9px;padding:0.8rem;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--green);">${conf.length}</div><div style="font-size:0.65rem;color:var(--muted);">Confirmed</div></div>
+      <div style="background:var(--bg);border-radius:9px;padding:0.8rem;text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--green);">${fmtN(earned)}</div><div style="font-size:0.65rem;color:var(--muted);">Earned</div></div>
+    </div>
+    ${regs.length?`<div style="background:var(--bg);border-radius:10px;overflow:hidden;">${regs.map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem 0.9rem;border-bottom:1px solid var(--border);gap:0.5rem;flex-wrap:wrap;"><div><div style="font-weight:600;font-size:0.88rem;">${r.first} ${r.last}</div><div style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--muted);">${fmtN(r.fee)}</div></div><span class="badge ${r.paymentStatus==='Confirmed'?'b-conf':'b-unconf'}">${r.paymentStatus==='Confirmed'?'✓ Paid':'Pending'}</span></div>`).join('')}</div>`:'<p style="color:var(--muted);font-size:0.85rem;">No referrals yet.</p>'}
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+// LEADERBOARD
+function getLB(){
+  const db=getDB();
+  return db.referrers.map(r=>{
+    const conf=db.registrations.filter(reg=>reg.referrerId===r.id&&reg.paymentStatus==='Confirmed');
+    return{...r,count:conf.length,pending:db.registrations.filter(reg=>reg.referrerId===r.id&&reg.paymentStatus==='Unconfirmed').length,earned:conf.reduce((s,reg)=>s+Math.round(reg.fee*REF_PCT),0)};
+  }).sort((a,b)=>b.count-a.count);
+}
+
+function renderLBFull(){
+  const lb=getLB(),max=lb[0]?.count||1,el=document.getElementById('lb-full');
+  if(!lb.length){el.innerHTML='<div class="empty"><div class="ei">🏆</div><p>No referrers yet</p></div>';return;}
+  el.innerHTML=lb.map((r,i)=>lbRow(r,i,max)).join('');
+}
+
+function lbRow(r,i,max){
+  const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+  const medals=['🥇','🥈','🥉'];
+  return`<div class="lb-item">
+    <div class="lb-rank ${rc}">${medals[i]||i+1}</div>
+    <div class="lb-av">${ini(r.name)}</div>
+    <div class="lb-info">
+      <div class="lb-name">${r.name}</div>
+      <div class="lb-code">${r.code}${r.pending?` · ${r.pending} pending`:''}</div>
+      <div class="lb-bar-w"><div class="lb-bar" style="width:${r.count?r.count/max*100:0}%"></div></div>
+    </div>
+    <div class="lb-stats"><div class="lb-num">${r.count}</div><div class="lb-earn">${fmtN(r.earned)}</div></div>
+  </div>`;
+}
+
+// COMMISSIONS
+function renderCommStats(){
+  const db=getDB(),conf=db.registrations.filter(r=>r.paymentStatus==='Confirmed');
+  const totalFee=conf.reduce((s,r)=>s+r.fee,0);
+  const totalRef=conf.reduce((s,r)=>s+(r.referrerId?Math.round(r.fee*REF_PCT):0),0);
+  const totalTech=conf.reduce((s,r)=>s+Math.round(r.fee*TECH_PCT),0);
+  const totalMid=conf.reduce((s,r)=>s+(r.referrerId?Math.round(r.fee*MID_PCT):0),0);
+  document.getElementById('comm-stats').innerHTML=`
+    <div class="sc"><div class="sc-label">Total Revenue</div><div class="sc-val" style="color:var(--green);font-size:1.4rem;">${fmtN(totalFee)}</div><div class="sc-sub">${conf.length} confirmed</div></div>
+    <div class="sc"><div class="sc-label">Referrer Comms</div><div class="sc-val" style="color:var(--gold);font-size:1.4rem;">${fmtN(totalRef)}</div><div class="sc-sub">25% per referral</div></div>
+    <div class="sc"><div class="sc-label">Tech (8%)</div><div class="sc-val" style="color:var(--blue);font-size:1.4rem;">${fmtN(totalTech)}</div><div class="sc-sub">Emmanuel</div></div>
+    <div class="sc"><div class="sc-label">JFMS Net</div><div class="sc-val" style="color:var(--black);font-size:1.4rem;">${fmtN(totalFee-totalRef-totalMid-totalTech)}</div><div class="sc-sub">after all cuts</div></div>`;
+}
+
+function renderComm(){
+  const db=getDB(),f=document.getElementById('comm-filter')?.value||'';
+  let regs=db.registrations.filter(r=>r.paymentStatus==='Confirmed');
+  if(f==='credited')regs=regs.filter(r=>r.referralCredited);
+  if(f==='pending')regs=regs.filter(r=>!r.referralCredited);
+  regs=regs.sort((a,b)=>b.createdAt-a.createdAt);
+  const el=document.getElementById('comm-list');
+  if(!regs.length){el.innerHTML='<div class="empty"><div class="ei">💰</div><p>No confirmed registrations yet</p></div>';return;}
+  el.innerHTML=regs.map(r=>{
+    const c=getComm(r);
+    return`<div class="comm-item">
+      <div class="comm-top">
+        <div><div class="comm-name">${r.first} ${r.last}</div><div style="font-size:0.72rem;color:var(--muted);">${fmt(r.confirmedAt||r.createdAt)}</div></div>
+        <div style="text-align:right;"><div style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green);">${fmtN(r.fee)}</div>${r.hasPromo?'<div style="font-size:0.62rem;color:var(--green);">promo</div>':''}</div>
+      </div>
+      <div class="comm-breakdown">
+        ${r.referrerId?`<div class="cbd"><div class="cbd-label">Referrer (25%)</div><div class="cbd-val" style="color:var(--gold);">${fmtN(c.refCut)}</div></div>`:'<div class="cbd"><div class="cbd-label">Referrer</div><div class="cbd-val" style="color:var(--muted);">—</div></div>'}
+        ${r.referrerId?`<div class="cbd"><div class="cbd-label">Middleman (10%)</div><div class="cbd-val">${fmtN(c.midCut)}</div></div>`:'<div class="cbd"><div class="cbd-label">Middleman</div><div class="cbd-val" style="color:var(--muted);">—</div></div>'}
+        <div class="cbd"><div class="cbd-label">Tech Emmanuel (8%)</div><div class="cbd-val" style="color:var(--blue);">${fmtN(c.techCut)}</div></div>
+        <div class="cbd"><div class="cbd-label">JFMS Net</div><div class="cbd-val" style="color:var(--green);">${fmtN(c.net)}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+        ${r.referrerId?`<span class="badge ${r.referralCredited?'b-cred':'b-unconf'}">${r.referralCredited?'✓ Credited':'Pending Credit'}</span>`:'<span class="badge b-pend">No referral</span>'}
+        ${!r.referralCredited&&r.referrerId?`<button class="btn btn-gold" style="font-size:0.72rem;padding:0.35rem 0.75rem;" onclick="markCredited('${r.id}')">Mark Paid</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markCredited(id){
+  const db=getDB(),reg=db.registrations.find(r=>r.id===id);
+  if(reg){reg.referralCredited=true;saveDB(db);renderAll();toast('Commission marked as paid.');}
+}
+
+// UTILS
+function makeLink(code){return window.location.href.replace('admin.html','index.html').split('?')[0]+'?ref='+code;}
+function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('📋 Copied!'));}
+function toast(msg,dur=3200){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>el.classList.remove('show'),dur);}
+function closeModal(e){if(!e||e.target===document.getElementById('overlay'))document.getElementById('overlay').classList.remove('open');}
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const map={'p-dash':'bn-dash','p-regs':'bn-regs','p-refs':'bn-refs','p-lb':'bn-lb','p-comm':'bn-comm'};
+  const bn=document.getElementById(map[id]);if(bn)bn.classList.add('active');
+  renderAll(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderAll(){renderDashStats();renderDashPending();renderDashLB();renderRegs();renderRefs();renderLBFull();renderCommStats();renderComm();}
+
+seed();
+</script>
+</body>
+</html>
